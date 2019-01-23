@@ -4,57 +4,46 @@ import (
 	"./payload"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
-	"strconv"
+	//	"strconv"
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "Hello, World")
-}
-
-func jsonHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("Requested")
 	if req.Method != "POST" {
-		fmt.Printf("method is not POST")
-		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Hello, World\n")
 		return
 	}
 
 	if req.Header.Get("Content-Type") != "application/json" {
-		fmt.Printf("Content-Type is not application/json")
+		fmt.Println("Content-Type is not application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	length, err := strconv.Atoi(req.Header.Get("Content-Length"))
-	if err != nil {
-		fmt.Printf("Content-Length error")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	body, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
 
-	body := make([]byte, length)
-	length, err = req.Body.Read(body)
-	if err != nil && err != io.EOF {
-		fmt.Printf("body error")
+	if err != nil {
+		fmt.Printf("body error: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	var jsonBody payload.PullRequestPayload
-	err = json.Unmarshal(body[:length], &jsonBody)
+	err = json.Unmarshal(body, &jsonBody)
 	if err != nil {
-		fmt.Printf("jsonBody error")
+		fmt.Printf("jsonBody error: %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("%v\n", jsonBody)
+	fmt.Println("%v\n", jsonBody)
 
 	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/json", jsonHandler)
 	http.ListenAndServe(":8080", nil)
 }
