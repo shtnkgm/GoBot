@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	//	"strconv"
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
@@ -38,7 +37,16 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("%v\n", jsonBody)
+	var author = jsonBody.PullRequest.User.Login
+	var title = jsonBody.PullRequest.Title
+	var url = jsonBody.PullRequest.URL
+	var baseBranch = jsonBody.PullRequest.Base.Ref
+	var merged = jsonBody.PullRequest.Merged
+	fmt.Printf("User: %s\n", author)
+	fmt.Printf("Title: %s\n", title)
+	fmt.Printf("URL: %s\n", url)
+	fmt.Printf("Base Branch: %s\n", baseBranch)
+	fmt.Printf("Merged: %s\n", merged)
 
 	w.WriteHeader(http.StatusOK)
 }
